@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Search</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+  <h1>Movie Search</h1>
+  <form id="searchForm" action="/recommend" method="POST">
+  <input type="number" id="numRecommendations" name="num_recommendations" placeholder="Number of Recommendations" min="5" max="100" step="5" value="15">
+    <input type="text" id="searchInput" name="movie_title" placeholder="Enter movie title">
+
+    <input type="submit" value="Search">
+  </form>
+  <div id="suggestions"></div>
+
+  <script>
+    $(document).ready(function() {
+      var delayTimer;
+
+      // Function to fetch and display suggestions
+      function fetchAndDisplaySuggestions(input) {
+        $.ajax({
+          url: '/autocomplete',
+          data: {
+            search: input
+          },
+          success: function(response) {
+            $('#suggestions').empty();
+            response.forEach(function(item) {
+              $('#suggestions').append('<p class="suggestion">' + item + '</p>');
+            });
+
+            // Handle click on suggestions
+            $('.suggestion').click(function() {
+              var suggestion = $(this).text();
+              $('#searchInput').val(suggestion);
+              $('#suggestions').empty();
+              $('#searchForm').submit();
+            });
+          }
+        });
+      }
+
+      // Handle input change for autocomplete
+      $('#searchInput').on('input', function() {
+        var input = $(this).val();
+        clearTimeout(delayTimer);
+        if (input.length >= 3) {
+          delayTimer = setTimeout(function() {
+            fetchAndDisplaySuggestions(input);
+          }, 500); // Delay in milliseconds (adjust as needed)
+        } else {
+          $('#suggestions').empty();
+        }
+      });
+
+      // Clear suggestions when clicking outside the input or form
+      $(document).on('click', function(event) {
+        if (!$(event.target).closest('#searchInput, #suggestions').length) {
+          $('#suggestions').empty();
+        }
+      });
+
+      // Clear suggestions when submitting the form
+      $('#searchForm').on('submit', function() {
+        $('#suggestions').empty();
+      });
+    });
+  </script>
+</body>
+
+</html>
